@@ -27,7 +27,7 @@ func InitDB() {
 	fmt.Println("Connected to Database")
 
 	// Auto migrate models
-	err = DB.AutoMigrate(&models.User{}, &models.Link{}, &models.ClickEvent{})
+	err = DB.AutoMigrate(&models.User{}, &models.Link{}, &models.ClickEvent{}, &models.AISummary{})
 	if err != nil {
 		log.Fatalf("Failed to auto migrate database: %v", err)
 	}

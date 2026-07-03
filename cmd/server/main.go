@@ -8,6 +8,7 @@ import (
 	"github.com/ankitsingh/urlshortener/internal/middleware"
 	"github.com/ankitsingh/urlshortener/internal/repository"
 	"github.com/ankitsingh/urlshortener/internal/services"
+	"github.com/ankitsingh/urlshortener/internal/workers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -52,7 +53,11 @@ func main() {
 		api.POST("/shorten", handlers.ShortenURL)
 		api.GET("/links", handlers.GetLinks)
 		api.GET("/links/:slug/analytics", handlers.GetLinkAnalytics)
+		api.GET("/links/:slug/summary", handlers.GetLinkSummary)
 	}
+
+	// Start Background Workers
+	workers.StartAISummaryWorker()
 
 	port := os.Getenv("PORT")
 	if port == "" {

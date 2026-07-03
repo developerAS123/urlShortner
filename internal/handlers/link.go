@@ -206,3 +206,26 @@ func GetLinkAnalytics(c *gin.Context) {
 		"clicks_by_device":  clicksByDevice,
 	})
 }
+
+// GetLinkSummary returns the latest AI summary for a link
+func GetLinkSummary(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	slug := c.Param("slug")
+
+	var link models.Link
+	if err := repository.DB.Where("slug = ? AND user_id = ?", slug, userID).First(&link).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Link not found or unauthorized"})
+		return
+	}
+
+	var summary models.AISummary
+	if err := repository.DB.Where("link_id = ?", link.ID).Order("week_start DESC").First(&summary).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Summary not available yet for this link"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"summary":      summary.SummaryText,
+		"generated_at": summary.GeneratedAt,
+	})
+}
