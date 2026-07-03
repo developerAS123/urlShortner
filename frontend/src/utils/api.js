@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 export const apiCall = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
@@ -26,4 +26,4 @@ export const apiCall = async (endpoint, options = {}) => {
 };
 
 // Expose the raw fetch url if needed (e.g., for short URL redirects)
-export const SHORT_URL_BASE = 'http://localhost:8080/';
+export const SHORT_URL_BASE = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:8080/';
