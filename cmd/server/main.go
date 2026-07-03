@@ -7,6 +7,7 @@ import (
 	"github.com/ankitsingh/urlshortener/internal/handlers"
 	"github.com/ankitsingh/urlshortener/internal/middleware"
 	"github.com/ankitsingh/urlshortener/internal/repository"
+	"github.com/ankitsingh/urlshortener/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -16,9 +17,14 @@ func main() {
 	// Load .env file if it exists (for local development)
 	_ = godotenv.Load()
 
-	// Initialize Database and Redis
+	// Initialize Database, Redis, and Services
 	repository.InitDB()
 	repository.InitRedis()
+	
+	services.InitGeoIP()
+	defer services.CloseGeoIP()
+	
+	middleware.InitRateLimiter()
 
 	r := gin.Default()
 
@@ -26,7 +32,6 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{
 		"http://localhost:5173", // Local frontend
-		// We'll add Vercel production URL later via ENV or hardcode when known
 	}
 	if vercelURL := os.Getenv("FRONTEND_URL"); vercelURL != "" {
 		config.AllowOrigins = append(config.AllowOrigins, vercelURL)
@@ -42,9 +47,11 @@ func main() {
 	// Protected routes
 	api := r.Group("/api")
 	api.Use(middleware.JWTAuthMiddleware())
+	api.Use(middleware.RateLimitMiddleware()) // Protect all API endpoints with Rate Limiting
 	{
 		api.POST("/shorten", handlers.ShortenURL)
-		// More analytics endpoints will be added here in Week 2
+		api.GET("/links", handlers.GetLinks)
+		api.GET("/links/:slug/analytics", handlers.GetLinkAnalytics)
 	}
 
 	port := os.Getenv("PORT")
